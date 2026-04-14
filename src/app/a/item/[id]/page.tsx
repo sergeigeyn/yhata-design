@@ -1,16 +1,11 @@
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Tag, Gift, HandHelping, MoveRight, Share2 } from "lucide-react";
 import {
-  MOCK_ITEMS,
-  MOCK_SPACES,
-  fmt,
-  spaceEmoji,
-  itemColor,
-  itemInitials,
+  MOCK_ITEMS, MOCK_SPACES, fmt, itemColor, itemInitials,
 } from "@/lib/mock-data";
 import { StubButton } from "@/components/stub-toast";
 
-export default async function ItemPage({
+export default async function ItemPageA({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -20,84 +15,135 @@ export default async function ItemPage({
   const space = MOCK_SPACES.find((s) => s.id === item.space_id);
 
   return (
-    <main className="min-h-screen bg-[#FAF8F5] pb-24">
-      <header className="px-6 pt-12 pb-4 flex justify-between items-center">
+    <main style={{ minHeight: "100vh", background: "#FAF8F5", paddingBottom: 96 }}>
+
+      {/* NAV */}
+      <nav style={{ padding: "16px 20px 12px", display: "flex", alignItems: "center" }}>
         <Link
           href={`/a/space/${item.space_id}`}
-          className="flex items-center gap-2 text-[#8A7E76] text-sm"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            color: "#8A7E76", fontSize: 13, textDecoration: "none",
+          }}
         >
-          <ArrowLeft size={18} strokeWidth={1.5} /> {space?.name || "Назад"}
+          <ArrowLeft size={14} strokeWidth={1.5} />
+          {space?.name || "Назад"}
         </Link>
-      </header>
+      </nav>
 
-      {/* Большое фото */}
-      <div
-        className="mx-6 rounded-2xl overflow-hidden mb-6 aspect-square max-h-80 flex items-center justify-center"
-        style={{ background: itemColor(item.category) }}
-      >
-        {item.photo_url ? (
-          <img
-            src={item.photo_url}
-            alt={item.name}
-            className="w-full h-full object-contain"
-          />
-        ) : (
-          <span className="text-6xl font-bold text-[#8A7E76]">
-            {itemInitials(item.name)}
-          </span>
+      {/* PHOTO */}
+      <div style={{ margin: "0 20px 20px" }}>
+        <div
+          style={{
+            borderRadius: 20, overflow: "hidden",
+            background: itemColor(item.category),
+            aspectRatio: "1 / 1",
+            maxHeight: 320,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          {item.photo_url ? (
+            <img src={item.photo_url} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <span style={{ fontSize: 64, fontWeight: 700, color: "rgba(44,36,32,0.18)", letterSpacing: -2 }}>
+              {itemInitials(item.name)}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* INFO */}
+      <div style={{ padding: "0 20px 20px", borderBottom: "1px solid #EDE7DF" }}>
+        <p style={{ fontSize: 11, color: "#B0A89E", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 8 }}>
+          {item.category}
+        </p>
+        <h1 style={{ fontSize: 26, fontWeight: 600, color: "#2C2420", letterSpacing: -0.5, lineHeight: 1.2, marginBottom: 10 }}>
+          {item.name}
+        </h1>
+        {item.price > 0 && (
+          <p style={{ fontSize: 24, fontWeight: 700, color: "#C4956A", letterSpacing: -0.5 }}>
+            {fmt(item.price)}
+          </p>
         )}
       </div>
 
-      <div className="px-6 space-y-4">
-        <h1 className="font-light text-2xl text-[#2C2420] tracking-[0.05em]">
-          {item.name}
-        </h1>
-        <p className="text-[#6B6460] text-sm leading-relaxed">{item.description}</p>
-        {item.price > 0 && (
-          <p className="text-[#C4956A] text-2xl font-light">{fmt(item.price)}</p>
-        )}
-
-        {item.lent_to && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
-            <span>🤝</span>
-            <p className="text-amber-800 text-sm">
-              Одолжено → <strong>{item.lent_to}</strong>
-            </p>
-          </div>
-        )}
-
-        {/* Где лежит */}
-        <div className="bg-[#F3EDE7] rounded-xl px-4 py-3 flex items-center gap-3">
-          <span className="text-xl">{spaceEmoji(space?.type || "other")}</span>
-          <div>
-            <p className="text-[#8A7E76] text-xs uppercase tracking-wider">
-              Где лежит
-            </p>
-            <p className="text-[#2C2420] text-sm font-medium">{space?.name}</p>
-          </div>
+      {/* DESCRIPTION */}
+      {item.description && (
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid #EDE7DF" }}>
+          <p style={{ fontSize: 14, color: "#6B6460", lineHeight: 1.6 }}>{item.description}</p>
         </div>
+      )}
 
-        {/* Actions grid 2x2 */}
-        <div className="grid grid-cols-2 gap-3 pt-2">
+      {/* LENT BANNER */}
+      {item.lent_to && (
+        <div
+          style={{
+            margin: "12px 20px",
+            background: "rgba(196,149,106,0.1)",
+            border: "1px solid rgba(196,149,106,0.25)",
+            borderRadius: 12,
+            padding: "12px 16px",
+            display: "flex", alignItems: "center", gap: 10,
+          }}
+        >
+          <HandHelping size={16} strokeWidth={1.5} style={{ color: "#C4956A", flexShrink: 0 }} />
+          <p style={{ fontSize: 14, color: "#8A5C3A", fontWeight: 500 }}>
+            Сейчас у <strong>{item.lent_to}</strong>
+          </p>
+        </div>
+      )}
+
+      {/* WHERE */}
+      {space && (
+        <div style={{ padding: "12px 20px 0" }}>
+          <Link href={`/a/space/${space.id}`} style={{ textDecoration: "none" }}>
+            <div
+              style={{
+                background: "#F3EDE7", borderRadius: 14,
+                padding: "14px 16px", display: "flex", alignItems: "center", gap: 12,
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 11, color: "#8A7E76", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 3 }}>
+                  Где хранится
+                </p>
+                <p style={{ fontSize: 15, fontWeight: 500, color: "#2C2420" }}>{space.name}</p>
+              </div>
+              <ArrowLeft size={16} strokeWidth={1.5} style={{ color: "#C4956A", transform: "rotate(180deg)" }} />
+            </div>
+          </Link>
+        </div>
+      )}
+
+      {/* ACTIONS */}
+      <div style={{ padding: "20px" }}>
+        <p style={{ fontSize: 11, color: "#B0A89E", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 14 }}>
+          Действия
+        </p>
+        <div className="grid grid-cols-2 gap-3">
           <StubButton
             label="Продать"
-            description="AI сгенерирует объявление для Avito"
-            className="bg-[#C4956A] text-white rounded-xl p-4 text-sm font-medium w-full"
+            description="AI создаст объявление для Avito"
+            icon={<Tag size={15} strokeWidth={1.5} style={{ marginRight: 8 }} />}
+            style={{ background: "#C4956A", borderRadius: 14, padding: "14px 16px", color: "white", fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", width: "100%" }}
           />
           <StubButton
-            label="🎁 Подарить"
-            description="Выберите кому подарить или отдать"
-            className="bg-[#F3EDE7] text-[#2C2420] rounded-xl p-4 text-sm font-medium w-full"
+            label="Подарить"
+            description="Кому и когда?"
+            icon={<Gift size={15} strokeWidth={1.5} style={{ marginRight: 8 }} />}
+            style={{ background: "#F3EDE7", borderRadius: 14, padding: "14px 16px", color: "#2C2420", fontSize: 14, fontWeight: 500, display: "flex", alignItems: "center", width: "100%" }}
           />
           <StubButton
-            label="🤝 Одолжить"
-            description="Укажите кому и на какой срок"
-            className="border border-[#E8E2DB] text-[#6B6460] rounded-xl p-3 text-sm w-full"
+            label="Одолжить"
+            description="Укажите кому и на сколько"
+            icon={<HandHelping size={15} strokeWidth={1.5} style={{ marginRight: 8 }} />}
+            style={{ border: "1px solid #E8E2DB", borderRadius: 14, padding: "14px 16px", color: "#6B6460", fontSize: 14, fontWeight: 500, display: "flex", alignItems: "center", width: "100%", background: "white" }}
           />
           <StubButton
-            label="📦 Переместить"
-            description="Перенести в другое пространство"
-            className="border border-[#E8E2DB] text-[#6B6460] rounded-xl p-3 text-sm w-full"
+            label="Переместить"
+            description="В другое пространство"
+            icon={<MoveRight size={15} strokeWidth={1.5} style={{ marginRight: 8 }} />}
+            style={{ border: "1px solid #E8E2DB", borderRadius: 14, padding: "14px 16px", color: "#6B6460", fontSize: 14, fontWeight: 500, display: "flex", alignItems: "center", width: "100%", background: "white" }}
           />
         </div>
       </div>

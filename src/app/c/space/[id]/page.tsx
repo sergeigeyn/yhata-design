@@ -30,7 +30,7 @@ export default async function SpacePageC({
       <header
         style={{
           position: "sticky",
-          top: 0,
+          top: 36,
           background: C.bg,
           zIndex: 10,
           borderBottom: `1px solid ${C.border}`,

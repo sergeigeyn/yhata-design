@@ -96,7 +96,7 @@ export default async function SpacePage({
       <StubButton
         label="+"
         description="Добавить вещь в это пространство"
-        className="fixed bottom-6 right-6 w-14 h-14 bg-[#C4956A] text-white rounded-full shadow-lg text-2xl flex items-center justify-center"
+        className="fixed bottom-24 right-6 w-14 h-14 bg-[#C4956A] text-white rounded-full shadow-lg text-2xl flex items-center justify-center"
       />
     </main>
   );

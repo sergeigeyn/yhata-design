@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { MOCK_SPACES, MOCK_ITEMS, fmt, spaceEmoji, itemInitials } from "@/lib/mock-data";
+import { StubButton } from "@/components/stub-toast";
 
 function ItemPhotoBSpace({
   item,
@@ -180,6 +181,20 @@ export default async function SpacePageB({
           </Link>
         ))}
       </div>
+      {/* FAB */}
+      <StubButton
+        label=""
+        description="Добавить вещь в это пространство"
+        icon={<span style={{ fontSize: 24, lineHeight: 1 }}>+</span>}
+        style={{
+          position: "fixed", bottom: 96, right: 24,
+          width: 52, height: 52, borderRadius: 26,
+          background: "#E8A04B", color: "white",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 4px 20px rgba(232,160,75,0.35)",
+        }}
+        className="md:hidden"
+      />
     </main>
   );
 }
