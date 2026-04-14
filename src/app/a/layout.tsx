@@ -96,12 +96,13 @@ function SidebarA({ pathname }: { pathname: string }) {
 }
 
 function BottomNavA({ pathname }: { pathname: string }) {
-  const items = [
+  const leftItems = [
     { icon: <Home size={22} strokeWidth={1.5} />, label: "Главная", href: "/a" },
     { icon: <Grid3x3 size={22} strokeWidth={1.5} />, label: "Пространства", href: "/a/space/1" },
-    { icon: <ScanLine size={22} strokeWidth={1.5} />, label: "Добавить", href: null, stub: true },
+  ];
+  const rightItems = [
     { icon: <BarChart2 size={22} strokeWidth={1.5} />, label: "Аналитика", href: "/a/analytics" },
-    { icon: <Settings size={22} strokeWidth={1.5} />, label: "Профиль", href: null, stub: true },
+    { icon: <Settings size={22} strokeWidth={1.5} />, label: "Профиль", stub: true },
   ];
 
   return (
@@ -112,10 +113,45 @@ function BottomNavA({ pathname }: { pathname: string }) {
         width: "100%", maxWidth: 430,
         background: "white", borderTop: "1px solid #F0EAE3",
         padding: "8px 0 16px",
-        display: "flex", zIndex: 50,
+        display: "flex", alignItems: "center", zIndex: 50,
       }}
     >
-      {items.map((item) =>
+      {/* Левые пункты */}
+      {leftItems.map((item) => (
+        <Link
+          key={item.label}
+          href={item.href}
+          style={{
+            flex: 1, display: "flex", flexDirection: "column",
+            alignItems: "center", gap: 3, textDecoration: "none",
+            color: pathname === item.href ? "#C4956A" : "#C8C0B8",
+          }}
+        >
+          {item.icon}
+          <span style={{ fontSize: 10, fontWeight: pathname === item.href ? 600 : 400 }}>
+            {item.label}
+          </span>
+        </Link>
+      ))}
+
+      {/* Центральная кнопка камеры — главный акцент */}
+      <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <StubButton
+          label=""
+          description="Добавить вещь через камеру"
+          icon={<ScanLine size={22} strokeWidth={2} style={{ color: "white" }} />}
+          style={{
+            width: 52, height: 52, borderRadius: 26,
+            background: "#C4956A",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 16px rgba(196,149,106,0.4)",
+            marginBottom: 6,
+          }}
+        />
+      </div>
+
+      {/* Правые пункты */}
+      {rightItems.map((item) =>
         item.stub ? (
           <StubButton
             key={item.label}
@@ -136,11 +172,11 @@ function BottomNavA({ pathname }: { pathname: string }) {
             style={{
               flex: 1, display: "flex", flexDirection: "column",
               alignItems: "center", gap: 3, textDecoration: "none",
-              color: pathname === item.href ? "#C4956A" : "#C8C0B8",
+              color: (pathname === item.href) ? "#C4956A" : "#C8C0B8",
             }}
           >
             {item.icon}
-            <span style={{ fontSize: 10, fontWeight: pathname === item.href ? 600 : 400 }}>
+            <span style={{ fontSize: 10, fontWeight: (pathname === item.href) ? 600 : 400 }}>
               {item.label}
             </span>
           </Link>

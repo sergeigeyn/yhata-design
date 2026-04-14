@@ -1,217 +1,136 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
 import {
-  MOCK_SPACES, MOCK_ITEMS, TOTAL_VALUE, TOTAL_ITEMS, LENT_ITEMS,
-  fmt, itemColor, itemInitials,
+  MOCK_SPACES, MOCK_ITEMS, fmt, itemColor, itemInitials,
 } from "@/lib/mock-data";
 import { StubButton } from "@/components/stub-toast";
 
-function ItemThumb({ item, size = 130 }: { item: typeof MOCK_ITEMS[0]; size?: number }) {
-  return (
-    <div style={{
-      width: size, height: size, borderRadius: 16,
-      background: itemColor(item.category),
-      display: "flex", alignItems: "center", justifyContent: "center",
-    }}>
-      <span style={{ fontSize: size * 0.26, fontWeight: 700, color: "#7A6E68" }}>
-        {itemInitials(item.name)}
-      </span>
-    </div>
-  );
-}
-
-const SPACE_EMOJIS: Record<string, string> = {
-  "Гардеробная": "👔", "Кабинет": "💻", "Кладовка": "📦",
-  "Кухня": "🍳", "Коробка с техникой": "📷",
-};
+// ── A «Витрина» ──
+// Главная философия: ты ПРОСМАТРИВАЕШЬ коллекцию визуально, как в шоурум.
+// Никакой статистики на первом экране. Вещи — главные герои.
 
 export default function DashboardA() {
-  const recentItems = [...MOCK_ITEMS]
+  const allItems = [...MOCK_ITEMS]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 8);
-
-  const topSpaces = [...MOCK_SPACES]
-    .map((s) => ({ ...s, value: s.items.reduce((sum, i) => sum + i.price, 0) }))
-    .sort((a, b) => b.value - a.value);
-  const maxVal = topSpaces[0]?.value || 1;
+    .slice(0, 18);
 
   return (
-    <div style={{ background: "#FAF8F5", minHeight: "100vh", paddingBottom: 80 }}>
+    <div style={{ background: "#FAF8F5", minHeight: "100vh", paddingBottom: 100 }}>
 
-      {/* ── HEADER ── */}
-      <div style={{ padding: "20px 20px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div>
-          <p style={{ fontSize: 12, color: "#B0A89E", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 2 }}>
-            Привет, Сергей
-          </p>
-          <h1 className="md:hidden" style={{ fontSize: 24, fontWeight: 700, color: "#2C2420", letterSpacing: -0.5 }}>
-            Мои вещи
-          </h1>
-          <h1 className="hidden md:block" style={{ fontSize: 28, fontWeight: 800, color: "#2C2420", letterSpacing: -0.8 }}>
-            Обзор имущества
-          </h1>
+      {/* ── ШАПКА ── */}
+      <div style={{ padding: "22px 20px 14px" }}>
+        <p style={{ fontSize: 12, color: "#B0A89E", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 3 }}>
+          Апрель · Привет, Сергей
+        </p>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: "#2C2420", letterSpacing: -0.6, lineHeight: 1 }}>
+          Моя коллекция
+        </h1>
+      </div>
+
+      {/* ── ГОРИЗОНТАЛЬНЫЙ ФИЛЬТР ПО ПРОСТРАНСТВАМ ── */}
+      <div style={{ overflowX: "auto", paddingBottom: 4 }} className="no-scrollbar">
+        <div style={{ display: "flex", gap: 8, padding: "0 20px 14px", width: "max-content" }}>
+          {/* «Все» — active state */}
+          <div style={{
+            padding: "7px 16px", borderRadius: 20,
+            background: "#2C2420", color: "#F5F0E8",
+            fontSize: 13, fontWeight: 600, whiteSpace: "nowrap",
+          }}>
+            Все · {MOCK_ITEMS.length}
+          </div>
+
+          {MOCK_SPACES.map((space) => (
+            <Link
+              key={space.id}
+              href={`/a/space/${space.id}`}
+              style={{
+                padding: "7px 16px", borderRadius: 20,
+                background: "white", border: "1px solid #E8E2DB",
+                color: "#6B6460", fontSize: 13, fontWeight: 400,
+                textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0,
+              }}
+            >
+              {space.name} · {space.items.length}
+            </Link>
+          ))}
         </div>
-        <Link
-          href="/a/search"
-          className="md:hidden"
-          style={{
-            width: 44, height: 44, borderRadius: 22,
-            background: "white", border: "1px solid #E8E2DB",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
-          <Search size={18} strokeWidth={1.8} style={{ color: "#6B6460" }} />
+      </div>
+
+      {/* ── ВИЗУАЛЬНАЯ ГАЛЕРЕЯ ── */}
+      {/* Mobile: 2 col, Desktop: 4 col */}
+      <div
+        className="grid grid-cols-2 md:grid-cols-4 gap-3 px-4 md:px-6"
+      >
+        {allItems.map((item) => (
+          <Link key={item.id} href={`/a/item/${item.id}`} style={{ textDecoration: "none" }}>
+            <div style={{
+              background: "white",
+              borderRadius: 18,
+              overflow: "hidden",
+              boxShadow: "0 1px 3px rgba(44,36,32,0.06)",
+            }}>
+              {/* Фото — 4:5 aspect (портретный, как в бутике) */}
+              <div style={{
+                aspectRatio: "4 / 5",
+                background: itemColor(item.category),
+                display: "flex", alignItems: "center", justifyContent: "center",
+                position: "relative",
+              }}>
+                {item.photo_url ? (
+                  <img src={item.photo_url} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <span style={{ fontSize: 32, fontWeight: 700, color: "rgba(44,36,32,0.2)", letterSpacing: -1 }}>
+                    {itemInitials(item.name)}
+                  </span>
+                )}
+                {item.lent_to && (
+                  <div style={{
+                    position: "absolute", bottom: 8, left: 8,
+                    background: "rgba(196,149,106,0.9)", borderRadius: 10,
+                    padding: "2px 8px", fontSize: 10, fontWeight: 600, color: "white",
+                  }}>
+                    у {item.lent_to}
+                  </div>
+                )}
+              </div>
+              {/* Подпись */}
+              <div style={{ padding: "10px 12px 12px" }}>
+                <p style={{
+                  fontSize: 12, color: "#2C2420", fontWeight: 500,
+                  lineHeight: 1.3, marginBottom: 3,
+                  display: "-webkit-box", WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical", overflow: "hidden",
+                }}>
+                  {item.name}
+                </p>
+                <p style={{ fontSize: 12, color: "#C4956A", fontWeight: 600 }}>
+                  {fmt(item.price)}
+                </p>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* ── ПОКАЗАТЬ ВСЕ ── */}
+      <div style={{ padding: "20px 20px 0", textAlign: "center" }}>
+        <Link href="/a/search" style={{
+          display: "inline-block", padding: "12px 28px",
+          border: "1px solid #E8E2DB", borderRadius: 24,
+          color: "#6B6460", fontSize: 13, textDecoration: "none", fontWeight: 500,
+          background: "white",
+        }}>
+          Все {MOCK_ITEMS.length} вещей
         </Link>
       </div>
 
-      {/* ── DESKTOP: 2-column grid ── */}
-      {/* ── MOBILE: single column ── */}
-      <div className="md:grid md:gap-6 md:px-6 md:pb-8" style={{ gridTemplateColumns: "1fr 320px" } as React.CSSProperties}>
-
-        {/* LEFT COLUMN */}
-        <div>
-          {/* HERO STATS */}
-          <div className="px-5 md:px-0 pb-5 md:pb-6">
-            <div style={{
-              background: "#2C2420", borderRadius: 20, padding: "20px",
-              position: "relative", overflow: "hidden",
-            }}>
-              <div style={{ position: "absolute", top: -30, right: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(196,149,106,0.12)" }} />
-              <div style={{ position: "absolute", bottom: -20, right: 40, width: 80, height: 80, borderRadius: "50%", background: "rgba(196,149,106,0.07)" }} />
-
-              <p style={{ fontSize: 11, color: "rgba(245,240,232,0.5)", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 16 }}>Имущество</p>
-
-              <div style={{ display: "flex", marginBottom: 16 }}>
-                <div style={{ flex: 1, paddingRight: 16 }}>
-                  <p style={{ fontSize: 40, fontWeight: 800, color: "#F5F0E8", letterSpacing: -2, lineHeight: 1 }}>{TOTAL_ITEMS}</p>
-                  <p style={{ fontSize: 12, color: "rgba(245,240,232,0.5)", marginTop: 4 }}>вещей</p>
-                </div>
-                <div style={{ width: 1, background: "rgba(245,240,232,0.1)", margin: "4px 0" }} />
-                <div style={{ flex: 2, paddingLeft: 16 }}>
-                  <p style={{ fontSize: 26, fontWeight: 800, color: "#C4956A", letterSpacing: -1, lineHeight: 1 }}>{fmt(TOTAL_VALUE)}</p>
-                  <p style={{ fontSize: 12, color: "rgba(245,240,232,0.5)", marginTop: 4 }}>общая стоимость</p>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: 8 }}>
-                <div style={{ flex: 1, background: "rgba(245,240,232,0.06)", borderRadius: 12, padding: "10px 12px" }}>
-                  <p style={{ fontSize: 18, fontWeight: 600, color: "#F5F0E8" }}>{MOCK_SPACES.length}</p>
-                  <p style={{ fontSize: 11, color: "rgba(245,240,232,0.4)", marginTop: 2 }}>пространств</p>
-                </div>
-                <div style={{ flex: 1, background: LENT_ITEMS.length > 0 ? "rgba(196,149,106,0.15)" : "rgba(245,240,232,0.06)", borderRadius: 12, padding: "10px 12px" }}>
-                  <p style={{ fontSize: 18, fontWeight: 600, color: LENT_ITEMS.length > 0 ? "#C4956A" : "#F5F0E8" }}>{LENT_ITEMS.length}</p>
-                  <p style={{ fontSize: 11, color: "rgba(245,240,232,0.4)", marginTop: 2 }}>одолжено</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ПОСЛЕДНИЕ — mobile: horizontal scroll, desktop: grid */}
-          <div className="mb-5 md:mb-0">
-            <div className="px-5 md:px-0 flex justify-between items-center mb-3">
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#2C2420" }}>Последние добавленные</p>
-              <Link href="/a/search" style={{ fontSize: 12, color: "#C4956A", textDecoration: "none" }}>Все →</Link>
-            </div>
-
-            {/* Mobile: horizontal scroll */}
-            <div
-              className="md:hidden flex gap-3 px-5 overflow-x-auto pb-2 no-scrollbar"
-            >
-              {recentItems.map((item) => (
-                <Link key={item.id} href={`/a/item/${item.id}`} style={{ textDecoration: "none", flexShrink: 0 }}>
-                  <ItemThumb item={item} size={120} />
-                  <p style={{ fontSize: 12, fontWeight: 500, color: "#2C2420", marginTop: 8, width: 120, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                    {item.name}
-                  </p>
-                  <p style={{ fontSize: 12, color: "#C4956A", marginTop: 2, fontWeight: 600 }}>{fmt(item.price)}</p>
-                </Link>
-              ))}
-            </div>
-
-            {/* Desktop: 4-column grid */}
-            <div className="hidden md:grid grid-cols-4 gap-4">
-              {recentItems.map((item) => (
-                <Link key={item.id} href={`/a/item/${item.id}`} style={{ textDecoration: "none" }}>
-                  <div style={{ background: "white", borderRadius: 16, overflow: "hidden", border: "1px solid #F0EAE3" }}>
-                    <div style={{ background: itemColor(item.category), height: 140, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 32, fontWeight: 700, color: "#7A6E68" }}>{itemInitials(item.name)}</span>
-                    </div>
-                    <div style={{ padding: "12px 12px 14px" }}>
-                      <p style={{ fontSize: 13, fontWeight: 500, color: "#2C2420", lineHeight: 1.3, marginBottom: 4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                        {item.name}
-                      </p>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: "#C4956A" }}>{fmt(item.price)}</p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN — spaces list (always visible, stacks below on mobile) */}
-        <div>
-          <div className="px-5 md:px-0 pt-5 md:pt-0">
-            <div className="flex justify-between items-center mb-4">
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#2C2420" }}>Пространства</p>
-              <Link href="/a/analytics" style={{ fontSize: 12, color: "#C4956A", textDecoration: "none" }}>Аналитика →</Link>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {topSpaces.map((space) => (
-                <Link key={space.id} href={`/a/space/${space.id}`} style={{ textDecoration: "none" }}>
-                  <div style={{
-                    background: "white", borderRadius: 16, padding: "14px 16px",
-                    display: "flex", alignItems: "center", gap: 12,
-                    border: "1px solid #F0EAE3",
-                  }}>
-                    <div style={{
-                      width: 44, height: 44, borderRadius: 12,
-                      background: "#F3EDE7", display: "flex", alignItems: "center",
-                      justifyContent: "center", flexShrink: 0, fontSize: 20,
-                    }}>
-                      {SPACE_EMOJIS[space.name] || "📁"}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 14, fontWeight: 500, color: "#2C2420", marginBottom: 6 }}>{space.name}</p>
-                      <div style={{ height: 4, background: "#F3EDE7", borderRadius: 2, overflow: "hidden" }}>
-                        <div style={{ height: 4, borderRadius: 2, background: "#C4956A", width: `${(space.value / maxVal) * 100}%` }} />
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: "#2C2420" }}>{space.items.length}</p>
-                      <p style={{ fontSize: 11, color: "#B0A89E" }}>вещей</p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            {/* Desktop: quick stats below spaces */}
-            <div className="hidden md:block mt-6">
-              <div style={{ background: "#F3EDE7", borderRadius: 16, padding: "16px" }}>
-                <p style={{ fontSize: 11, color: "#8A7E76", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 12 }}>Быстрые действия</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <Link href="/a/search" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "white", borderRadius: 12, textDecoration: "none" }}>
-                    <span style={{ fontSize: 16 }}>🔍</span>
-                    <span style={{ fontSize: 13, color: "#2C2420" }}>Найти вещь</span>
-                  </Link>
-                  <StubButton
-                    label="Добавить вещь"
-                    description="Через камеру — в разработке"
-                    className="flex items-center gap-3 px-3 py-2.5 bg-white rounded-xl text-sm text-[#2C2420] w-full text-left"
-                    icon={<span style={{ fontSize: 16, marginRight: 2 }}>📸</span>}
-                  />
-                  <Link href="/a/analytics" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "white", borderRadius: 12, textDecoration: "none" }}>
-                    <span style={{ fontSize: 16 }}>📊</span>
-                    <span style={{ fontSize: 13, color: "#2C2420" }}>Аналитика</span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* FAB mobile */}
+      <StubButton
+        label=""
+        description="Добавить вещь через камеру"
+        className="md:hidden fixed bottom-[88px] right-5 w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
+        style={{ background: "#C4956A", color: "white" }}
+        icon={<span style={{ fontSize: 26, lineHeight: 1 }}>+</span>}
+      />
     </div>
   );
 }

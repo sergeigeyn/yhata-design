@@ -1,210 +1,287 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
 import {
   MOCK_SPACES, MOCK_ITEMS, TOTAL_VALUE, TOTAL_ITEMS, LENT_ITEMS,
   fmt, itemInitials,
 } from "@/lib/mock-data";
 import { StubButton } from "@/components/stub-toast";
+import { TrendingUp, AlertCircle } from "lucide-react";
 
-const C = {
+// ── B «Портфель» ──
+// Главная философия: вещи — это активы. Управляй имуществом как инвестиционным
+// портфелем. Цифры главные, фото вторичны. Всё в деньгах.
+
+const B = {
   bg: "#0F0E0D", surface: "#1A1917", surface2: "#201F1C",
   border: "#2E2C29", text: "#F5F0E8", textMid: "#9C978F",
   textDim: "#625E58", accent: "#E8A04B",
 };
 
-const SPACE_EMOJIS: Record<string, string> = {
-  "Гардеробная": "👔", "Кабинет": "💻", "Кладовка": "📦",
-  "Кухня": "🍳", "Коробка с техникой": "📷",
+// Цвета категорий для графика аллокации
+const CAT_COLORS: Record<string, string> = {
+  "Техника":  "#E8A04B",
+  "Одежда":   "#C4956A",
+  "Спорт":    "#6A9C8A",
+  "Кухня":    "#8A7EAA",
+  "Обувь":    "#AA8A7E",
+  "Другое":   "#625E58",
 };
 
 export default function DashboardB() {
-  const recentItems = [...MOCK_ITEMS]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  // Аллокация по категориям
+  const catMap = new Map<string, { count: number; value: number }>();
+  for (const item of MOCK_ITEMS) {
+    if (!catMap.has(item.category)) catMap.set(item.category, { count: 0, value: 0 });
+    catMap.get(item.category)!.count++;
+    catMap.get(item.category)!.value += item.price;
+  }
+  const categories = Array.from(catMap.entries())
+    .map(([name, data]) => ({ name, ...data, pct: Math.round((data.value / TOTAL_VALUE) * 100) }))
+    .sort((a, b) => b.value - a.value);
+
+  // Топ активы по стоимости
+  const topAssets = [...MOCK_ITEMS]
+    .sort((a, b) => b.price - a.price)
     .slice(0, 8);
 
-  const topSpaces = [...MOCK_SPACES]
+  // Портфели (пространства) по стоимости
+  const portfolios = [...MOCK_SPACES]
     .map((s) => ({ ...s, value: s.items.reduce((sum, i) => sum + i.price, 0) }))
     .sort((a, b) => b.value - a.value);
-  const maxVal = topSpaces[0]?.value || 1;
+
+  // Формат в тысячах/миллионах
+  const fmtShort = (v: number) =>
+    v >= 1_000_000
+      ? `${(v / 1_000_000).toFixed(1)}M`
+      : v >= 1000
+      ? `${(v / 1000).toFixed(0)}K`
+      : String(v);
 
   return (
-    <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 80 }}>
+    <div style={{ background: B.bg, minHeight: "100vh", paddingBottom: 100 }}>
 
-      {/* ── HEADER ── */}
-      <div style={{ padding: "20px 20px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div>
-          <p style={{ fontSize: 12, color: C.textDim, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 2 }}>
-            Привет, Сергей
+      {/* ── PORTFOLIO HEADER ── */}
+      <div style={{ padding: "24px 20px 0" }}>
+        <p style={{ fontSize: 11, color: B.textDim, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>
+          Портфель имущества
+        </p>
+
+        {/* Главная цифра — огромная */}
+        <div style={{ marginBottom: 8 }}>
+          <p style={{ fontSize: 52, fontWeight: 800, color: B.text, letterSpacing: -3, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+            {fmt(TOTAL_VALUE)}
           </p>
-          <h1 className="md:hidden" style={{ fontSize: 26, fontWeight: 800, color: C.text, letterSpacing: -0.8 }}>
-            Мои вещи
-          </h1>
-          <h1 className="hidden md:block" style={{ fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: -0.8 }}>
-            Обзор имущества
-          </h1>
         </div>
-        <Link
-          href="/b/search"
-          className="md:hidden"
-          style={{
-            width: 44, height: 44, borderRadius: 22,
-            background: C.surface, border: `1px solid ${C.border}`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
-          <Search size={18} strokeWidth={1.8} style={{ color: C.textMid }} />
-        </Link>
+
+        {/* Подстрока */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+          <TrendingUp size={14} strokeWidth={1.5} style={{ color: "#6A9C8A" }} />
+          <p style={{ fontSize: 13, color: B.textMid }}>
+            {TOTAL_ITEMS} активов · {MOCK_SPACES.length} портфелей
+          </p>
+        </div>
+
+        {/* Разделитель */}
+        <div style={{ height: 1, background: B.border, marginBottom: 20 }} />
       </div>
 
-      {/* ── DESKTOP: 2-column grid / MOBILE: single column ── */}
-      <div className="md:grid md:gap-6 md:px-6 md:pb-8" style={{ gridTemplateColumns: "1fr 320px" } as React.CSSProperties}>
+      {/* ── АЛЛОКАЦИЯ ── */}
+      <div style={{ padding: "0 20px 24px" }}>
+        <p style={{ fontSize: 11, color: B.textDim, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 14 }}>
+          Аллокация
+        </p>
 
-        {/* LEFT COLUMN */}
-        <div>
-          {/* HERO STATS */}
-          <div className="px-5 md:px-0 pb-5 md:pb-6">
-            <div style={{
-              background: C.surface, border: `1px solid ${C.border}`,
-              borderRadius: 20, padding: "20px",
-              position: "relative", overflow: "hidden",
+        {/* Stacked bar */}
+        <div style={{
+          height: 8, borderRadius: 4, overflow: "hidden",
+          display: "flex", marginBottom: 14,
+        }}>
+          {categories.map((cat) => (
+            <div
+              key={cat.name}
+              style={{ width: `${cat.pct}%`, background: CAT_COLORS[cat.name] || B.textDim }}
+            />
+          ))}
+        </div>
+
+        {/* Легенда */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {categories.map((cat) => (
+            <div key={cat.name} style={{
+              background: B.surface, border: `1px solid ${B.border}`,
+              borderRadius: 12, padding: "12px 14px",
             }}>
-              <div style={{ position: "absolute", top: -60, right: -60, width: 160, height: 160, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,160,75,0.08) 0%, transparent 70%)" }} />
-
-              <p style={{ fontSize: 11, color: C.textDim, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 16 }}>Имущество</p>
-
-              <div style={{ display: "flex", marginBottom: 16 }}>
-                <div style={{ flex: 1, paddingRight: 16 }}>
-                  <p style={{ fontSize: 44, fontWeight: 800, color: C.text, letterSpacing: -2, lineHeight: 1 }}>{TOTAL_ITEMS}</p>
-                  <p style={{ fontSize: 12, color: C.textDim, marginTop: 4 }}>вещей</p>
-                </div>
-                <div style={{ width: 1, background: C.border, margin: "4px 0" }} />
-                <div style={{ flex: 2, paddingLeft: 16 }}>
-                  <p style={{ fontSize: 26, fontWeight: 800, color: C.accent, letterSpacing: -1, lineHeight: 1 }}>{fmt(TOTAL_VALUE)}</p>
-                  <p style={{ fontSize: 12, color: C.textDim, marginTop: 4 }}>общая стоимость</p>
-                </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                <div style={{ width: 8, height: 8, borderRadius: 2, background: CAT_COLORS[cat.name] || B.textDim, flexShrink: 0 }} />
+                <p style={{ fontSize: 12, color: B.textMid }}>{cat.name}</p>
               </div>
+              <p style={{ fontSize: 16, fontWeight: 700, color: B.text, letterSpacing: -0.5, marginBottom: 1 }}>
+                {cat.pct}%
+              </p>
+              <p style={{ fontSize: 11, color: B.textDim }}>{fmt(cat.value)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
-              <div style={{ display: "flex", gap: 8 }}>
-                <div style={{ flex: 1, background: "rgba(245,240,232,0.04)", borderRadius: 12, padding: "10px 12px", border: `1px solid ${C.border}` }}>
-                  <p style={{ fontSize: 18, fontWeight: 700, color: C.text }}>{MOCK_SPACES.length}</p>
-                  <p style={{ fontSize: 11, color: C.textDim, marginTop: 2 }}>пространств</p>
-                </div>
-                <div style={{ flex: 1, background: LENT_ITEMS.length > 0 ? "rgba(232,160,75,0.1)" : "rgba(245,240,232,0.04)", borderRadius: 12, padding: "10px 12px", border: `1px solid ${LENT_ITEMS.length > 0 ? "rgba(232,160,75,0.2)" : C.border}` }}>
-                  <p style={{ fontSize: 18, fontWeight: 700, color: LENT_ITEMS.length > 0 ? C.accent : C.text }}>{LENT_ITEMS.length}</p>
-                  <p style={{ fontSize: 11, color: C.textDim, marginTop: 2 }}>одолжено</p>
-                </div>
+      {/* ── ДЕСКТОП: 2 колонки ── */}
+      <div className="md:grid md:gap-0 md:px-6" style={{ gridTemplateColumns: "1fr 300px" } as React.CSSProperties}>
+
+        {/* ЛЕВАЯ — топ активы */}
+        <div className="md:pr-6 md:border-r" style={{ borderColor: B.border } as React.CSSProperties}>
+
+          {/* Если есть одолженные — алерт */}
+          {LENT_ITEMS.length > 0 && (
+            <div style={{
+              margin: "0 20px 16px", padding: "12px 16px",
+              background: "rgba(232,160,75,0.08)", border: "1px solid rgba(232,160,75,0.2)",
+              borderRadius: 12, display: "flex", gap: 10, alignItems: "flex-start",
+            }}>
+              <AlertCircle size={15} strokeWidth={1.5} style={{ color: B.accent, marginTop: 1, flexShrink: 0 }} />
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 600, color: B.accent, marginBottom: 2 }}>
+                  {LENT_ITEMS.length} актива вне портфеля
+                </p>
+                <p style={{ fontSize: 12, color: B.textMid }}>
+                  {LENT_ITEMS.map((i) => `${i.name.split(" ").slice(0, 2).join(" ")} → ${i.lent_to}`).join(" · ")}
+                </p>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* ПОСЛЕДНИЕ */}
-          <div className="mb-5 md:mb-0">
-            <div className="px-5 md:px-0 flex justify-between items-center mb-3">
-              <p style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Последние добавленные</p>
-              <Link href="/b/search" style={{ fontSize: 12, color: C.accent, textDecoration: "none" }}>Все →</Link>
+          <div className="px-5 md:px-0">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <p style={{ fontSize: 11, color: B.textDim, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                Топ активы
+              </p>
+              <Link href="/b/search" style={{ fontSize: 12, color: B.accent, textDecoration: "none" }}>
+                все →
+              </Link>
             </div>
 
-            {/* Mobile: horizontal scroll */}
-            <div className="md:hidden flex gap-3 px-5 overflow-x-auto pb-2 no-scrollbar">
-              {recentItems.map((item) => (
-                <Link key={item.id} href={`/b/item/${item.id}`} style={{ textDecoration: "none", flexShrink: 0 }}>
-                  <div style={{ width: 120, height: 120, borderRadius: 16, background: C.surface2, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
-                    <span style={{ fontSize: 28, fontWeight: 800, color: C.textDim }}>{itemInitials(item.name)}</span>
-                  </div>
-                  <p style={{ fontSize: 12, fontWeight: 500, color: C.text, width: 120, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                    {item.name}
-                  </p>
-                  <p style={{ fontSize: 12, color: C.accent, marginTop: 2, fontWeight: 600 }}>{fmt(item.price)}</p>
-                </Link>
-              ))}
-            </div>
-
-            {/* Desktop: 4-column grid */}
-            <div className="hidden md:grid grid-cols-4 gap-3">
-              {recentItems.map((item) => (
+            {topAssets.map((item, i) => {
+              const pct = Math.round((item.price / TOTAL_VALUE) * 100);
+              return (
                 <Link key={item.id} href={`/b/item/${item.id}`} style={{ textDecoration: "none" }}>
-                  <div style={{ background: C.surface, borderRadius: 14, overflow: "hidden", border: `1px solid ${C.border}` }}>
-                    <div style={{ height: 130, background: C.surface2, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 30, fontWeight: 800, color: C.textDim }}>{itemInitials(item.name)}</span>
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "13px 0",
+                    borderBottom: i < topAssets.length - 1 ? `1px solid ${B.border}` : "none",
+                  }}>
+                    {/* Rank */}
+                    <span style={{ fontSize: 11, color: B.textDim, width: 18, flexShrink: 0, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
+                      {i + 1}
+                    </span>
+
+                    {/* Инициалы-бейдж */}
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 8,
+                      background: B.surface2, border: `1px solid ${B.border}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: B.textDim }}>
+                        {itemInitials(item.name)}
+                      </span>
                     </div>
-                    <div style={{ padding: "10px 12px 12px" }}>
-                      <p style={{ fontSize: 12, fontWeight: 500, color: C.text, lineHeight: 1.3, marginBottom: 4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+
+                    {/* Имя + место */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{
+                        fontSize: 14, color: B.text, fontWeight: 500,
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        marginBottom: 2,
+                      }}>
                         {item.name}
                       </p>
-                      <p style={{ fontSize: 12, fontWeight: 700, color: C.accent }}>{fmt(item.price)}</p>
+                      <p style={{ fontSize: 11, color: B.textDim }}>{item.space_name} · {item.category}</p>
+                    </div>
+
+                    {/* Цена + доля */}
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: B.accent, marginBottom: 2, fontVariantNumeric: "tabular-nums" }}>
+                        {fmt(item.price)}
+                      </p>
+                      <p style={{ fontSize: 10, color: B.textDim }}>{pct}% портфеля</p>
                     </div>
                   </div>
                 </Link>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* RIGHT COLUMN — spaces */}
-        <div>
-          <div className="px-5 md:px-0 pt-5 md:pt-0">
-            <div className="flex justify-between items-center mb-4">
-              <p style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Пространства</p>
-              <Link href="/b/analytics" style={{ fontSize: 12, color: C.accent, textDecoration: "none" }}>Аналитика →</Link>
+        {/* ПРАВАЯ — портфели (пространства) */}
+        <div className="md:pl-6 mt-6 md:mt-0">
+          <div className="px-5 md:px-0">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <p style={{ fontSize: 11, color: B.textDim, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                Портфели
+              </p>
+              <Link href="/b/analytics" style={{ fontSize: 12, color: B.accent, textDecoration: "none" }}>
+                аналитика →
+              </Link>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {topSpaces.map((space) => (
-                <Link key={space.id} href={`/b/space/${space.id}`} style={{ textDecoration: "none" }}>
-                  <div style={{
-                    background: C.surface, border: `1px solid ${C.border}`,
-                    borderRadius: 16, padding: "14px 16px",
-                    display: "flex", alignItems: "center", gap: 12,
-                  }}>
+              {portfolios.map((space) => {
+                const pct = Math.round((space.value / TOTAL_VALUE) * 100);
+                return (
+                  <Link key={space.id} href={`/b/space/${space.id}`} style={{ textDecoration: "none" }}>
                     <div style={{
-                      width: 44, height: 44, borderRadius: 12,
-                      background: C.surface2, border: `1px solid ${C.border}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0, fontSize: 20,
+                      background: B.surface, border: `1px solid ${B.border}`,
+                      borderRadius: 14, padding: "14px 16px",
                     }}>
-                      {SPACE_EMOJIS[space.name] || "📁"}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 6 }}>{space.name}</p>
-                      <div style={{ height: 3, background: C.border, borderRadius: 2, overflow: "hidden" }}>
-                        <div style={{ height: 3, borderRadius: 2, background: `linear-gradient(to right, ${C.accent}, rgba(232,160,75,0.4))`, width: `${(space.value / maxVal) * 100}%` }} />
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                        <p style={{ fontSize: 14, fontWeight: 500, color: B.text }}>{space.name}</p>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: B.accent, fontVariantNumeric: "tabular-nums" }}>
+                          {fmtShort(space.value)} ₽
+                        </p>
+                      </div>
+                      <div style={{ height: 3, background: B.border, borderRadius: 2, overflow: "hidden", marginBottom: 6 }}>
+                        <div style={{
+                          height: "100%", width: `${pct}%`,
+                          background: `linear-gradient(to right, ${B.accent}, rgba(232,160,75,0.5))`,
+                          borderRadius: 2,
+                        }} />
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <p style={{ fontSize: 11, color: B.textDim }}>{space.items.length} активов</p>
+                        <p style={{ fontSize: 11, color: B.textDim }}>{pct}%</p>
                       </div>
                     </div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{space.items.length}</p>
-                      <p style={{ fontSize: 11, color: C.textDim }}>вещей</p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
 
-            {/* Desktop quick actions */}
-            <div className="hidden md:block mt-6">
-              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px" }}>
-                <p style={{ fontSize: 11, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 12 }}>Быстрые действия</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <Link href="/b/search" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: C.surface2, borderRadius: 12, textDecoration: "none", border: `1px solid ${C.border}` }}>
-                    <span style={{ fontSize: 16 }}>🔍</span>
-                    <span style={{ fontSize: 13, color: C.text }}>Найти вещь</span>
-                  </Link>
-                  <StubButton
-                    label="Добавить вещь"
-                    description="Через камеру — в разработке"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm w-full text-left text-[#F5F0E8]"
-                    style={{ background: C.surface2, border: `1px solid ${C.border}` } as React.CSSProperties}
-                    icon={<span style={{ fontSize: 16, marginRight: 2 }}>📸</span>}
-                  />
-                  <Link href="/b/analytics" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: C.surface2, borderRadius: 12, textDecoration: "none", border: `1px solid ${C.border}` }}>
-                    <span style={{ fontSize: 16 }}>📊</span>
-                    <span style={{ fontSize: 13, color: C.text }}>Аналитика</span>
-                  </Link>
-                </div>
+            {/* Итог */}
+            <div style={{
+              marginTop: 16, padding: "14px 16px",
+              background: B.surface2, border: `1px solid ${B.border}`,
+              borderRadius: 14,
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                <p style={{ fontSize: 12, color: B.textDim }}>Общий портфель</p>
+                <p style={{ fontSize: 12, fontWeight: 700, color: B.text }}>{fmt(TOTAL_VALUE)}</p>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <p style={{ fontSize: 12, color: B.textDim }}>Активов</p>
+                <p style={{ fontSize: 12, fontWeight: 700, color: B.text }}>{TOTAL_ITEMS}</p>
               </div>
             </div>
           </div>
         </div>
+
       </div>
+
+      {/* FAB */}
+      <StubButton
+        label=""
+        description="Добавить актив"
+        className="md:hidden fixed bottom-[88px] right-5 w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+        style={{ background: B.accent, color: B.bg }}
+        icon={<span style={{ fontSize: 22, fontWeight: 700 }}>+</span>}
+      />
     </div>
   );
 }
