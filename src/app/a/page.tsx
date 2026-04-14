@@ -1,5 +1,6 @@
+"use client";
 import Link from "next/link";
-import { Search, Settings } from "lucide-react";
+import { Search, Plus, Home, Grid3x3, BarChart2, ScanLine, Settings } from "lucide-react";
 import {
   MOCK_SPACES,
   MOCK_ITEMS,
@@ -7,218 +8,294 @@ import {
   TOTAL_ITEMS,
   LENT_ITEMS,
   fmt,
-  spaceEmoji,
   itemColor,
   itemInitials,
 } from "@/lib/mock-data";
 import { StubButton } from "@/components/stub-toast";
 
-function ItemPhoto({
-  item,
-  size = 80,
-}: {
-  item: { name: string; category: string; photo_url: string | null };
-  size?: number;
-}) {
-  if (item.photo_url)
-    return (
-      <img
-        src={item.photo_url}
-        alt={item.name}
-        style={{ width: size, height: size, objectFit: "cover", borderRadius: 12 }}
-      />
-    );
+function ItemThumb({ item, size = 72 }: { item: typeof MOCK_ITEMS[0]; size?: number }) {
   return (
     <div
       style={{
         width: size,
         height: size,
-        borderRadius: 12,
+        borderRadius: 14,
         background: itemColor(item.category),
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        flexShrink: 0,
       }}
     >
-      <span
-        style={{
-          fontSize: size * 0.28,
-          fontWeight: 600,
-          color: "#8A7E76",
-          letterSpacing: -0.5,
-        }}
-      >
+      <span style={{ fontSize: size * 0.26, fontWeight: 600, color: "#7A6E68", letterSpacing: -0.3 }}>
         {itemInitials(item.name)}
       </span>
     </div>
   );
 }
 
+const SPACE_ICONS: Record<string, string> = {
+  "Гардеробная": "👔",
+  "Кабинет": "💻",
+  "Кладовка": "📦",
+  "Кухня": "🍳",
+  "Коробка с техникой": "📷",
+};
+
+function SpaceIcon({ name, type }: { name: string; type: string }) {
+  const icons: Record<string, React.ReactNode> = {};
+  const emoji = SPACE_ICONS[name];
+  if (emoji) return <span style={{ fontSize: 22 }}>{emoji}</span>;
+  return <Grid3x3 size={20} strokeWidth={1.5} style={{ color: "#8A7E76" }} />;
+}
+
 export default function DashboardA() {
   const recentItems = [...MOCK_ITEMS]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 6);
+    .slice(0, 8);
 
-  const spaceData = MOCK_SPACES.map((s) => ({
-    ...s,
-    value: s.items.reduce((sum, i) => sum + i.price, 0),
-  })).sort((a, b) => b.value - a.value);
-
-  const top5Spaces = spaceData.slice(0, 5);
-  const maxSpaceValue = top5Spaces[0]?.value || 1;
+  const topSpaces = [...MOCK_SPACES]
+    .map((s) => ({ ...s, value: s.items.reduce((sum, i) => sum + i.price, 0) }))
+    .sort((a, b) => b.value - a.value);
+  const maxVal = topSpaces[0]?.value || 1;
 
   return (
-    <main className="min-h-screen bg-[#FAF8F5] pb-24">
-      {/* HEADER */}
-      <header className="px-6 pt-10 pb-6">
-        <div className="flex items-center justify-between mb-5">
-          <span className="font-light text-2xl tracking-[0.3em] text-[#2C2420] uppercase">
-            YHATA
-          </span>
-          <div className="flex gap-4">
-            <Link href="/a/search">
-              <Search size={20} strokeWidth={1.5} className="text-[#8A7E76]" />
-            </Link>
-            <StubButton
-              label=""
-              icon={<Settings size={20} strokeWidth={1.5} className="text-[#8A7E76]" />}
-              description="Настройки профиля"
-              className="flex items-center"
-            />
-          </div>
-        </div>
-        <p className="text-[#8A7E76] text-sm mb-1">Привет, Сергей</p>
-      </header>
+    <div style={{ background: "#FAF8F5", minHeight: "100vh", paddingBottom: 80 }}>
 
-      {/* HERO STATS */}
-      <section className="px-6 mb-5">
-        <div className="bg-white rounded-2xl shadow-sm p-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#8A7E76] mb-4">
-            Ваше имущество
+      {/* ── HEADER ── */}
+      <div style={{ padding: "20px 20px 8px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <p style={{ fontSize: 12, color: "#B0A89E", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 2 }}>
+            Привет, Сергей
           </p>
-          <div className="flex">
-            <div className="flex-1 text-center">
-              <p className="text-2xl font-medium text-[#2C2420]">{TOTAL_ITEMS}</p>
-              <p className="text-xs uppercase tracking-[0.15em] text-[#8A7E76] mt-1">
-                Предметов
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#2C2420", letterSpacing: -0.5, lineHeight: 1.1 }}>
+            Мои вещи
+          </h1>
+        </div>
+        <Link
+          href="/a/search"
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            background: "white",
+            border: "1px solid #E8E2DB",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Search size={18} strokeWidth={1.8} style={{ color: "#6B6460" }} />
+        </Link>
+      </div>
+
+      {/* ── HERO STATS ── */}
+      <div style={{ padding: "12px 20px 0" }}>
+        <div
+          style={{
+            background: "#2C2420",
+            borderRadius: 20,
+            padding: "20px 20px 24px",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Decorative circle */}
+          <div style={{
+            position: "absolute", top: -30, right: -30,
+            width: 120, height: 120, borderRadius: "50%",
+            background: "rgba(196,149,106,0.12)",
+          }} />
+          <div style={{
+            position: "absolute", bottom: -20, right: 40,
+            width: 80, height: 80, borderRadius: "50%",
+            background: "rgba(196,149,106,0.07)",
+          }} />
+
+          <p style={{ fontSize: 11, color: "rgba(245,240,232,0.5)", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 16 }}>
+            Имущество
+          </p>
+
+          <div style={{ display: "flex", gap: 0 }}>
+            <div style={{ flex: 1, paddingRight: 16 }}>
+              <p style={{ fontSize: 36, fontWeight: 700, color: "#F5F0E8", letterSpacing: -1.5, lineHeight: 1 }}>
+                {TOTAL_ITEMS}
               </p>
+              <p style={{ fontSize: 12, color: "rgba(245,240,232,0.5)", marginTop: 4 }}>вещей</p>
             </div>
-            <div className="w-px bg-[#E8E2DB]" />
-            <div className="flex-1 text-center">
-              <p className="text-2xl font-medium text-[#2C2420]">{fmt(TOTAL_VALUE)}</p>
-              <p className="text-xs uppercase tracking-[0.15em] text-[#8A7E76] mt-1">
-                Стоимость
+            <div style={{ width: 1, background: "rgba(245,240,232,0.1)", margin: "4px 0" }} />
+            <div style={{ flex: 2, paddingLeft: 16 }}>
+              <p style={{ fontSize: 28, fontWeight: 700, color: "#C4956A", letterSpacing: -1, lineHeight: 1 }}>
+                {fmt(TOTAL_VALUE)}
               </p>
+              <p style={{ fontSize: 12, color: "rgba(245,240,232,0.5)", marginTop: 4 }}>общая стоимость</p>
             </div>
-            <div className="w-px bg-[#E8E2DB]" />
-            <div className="flex-1 text-center">
-              <p className="text-2xl font-medium text-[#2C2420]">{MOCK_SPACES.length}</p>
-              <p className="text-xs uppercase tracking-[0.15em] text-[#8A7E76] mt-1">
-                Пространств
+          </div>
+
+          {/* Sub stats */}
+          <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+            <div style={{
+              flex: 1, background: "rgba(245,240,232,0.06)", borderRadius: 12,
+              padding: "10px 12px",
+            }}>
+              <p style={{ fontSize: 18, fontWeight: 600, color: "#F5F0E8", letterSpacing: -0.5 }}>
+                {MOCK_SPACES.length}
               </p>
+              <p style={{ fontSize: 11, color: "rgba(245,240,232,0.4)", marginTop: 2 }}>пространств</p>
+            </div>
+            <div style={{
+              flex: 1, background: "rgba(245,240,232,0.06)", borderRadius: 12,
+              padding: "10px 12px",
+            }}>
+              <p style={{ fontSize: 18, fontWeight: 600, color: LENT_ITEMS.length > 0 ? "#C4956A" : "#F5F0E8", letterSpacing: -0.5 }}>
+                {LENT_ITEMS.length}
+              </p>
+              <p style={{ fontSize: 11, color: "rgba(245,240,232,0.4)", marginTop: 2 }}>одолжено</p>
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* АНАЛИТИКА — бар-чарт топ-5 пространств */}
-      <section className="px-6 mb-5">
-        <div className="bg-white rounded-2xl shadow-sm p-5">
-          <div className="flex justify-between items-center mb-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#8A7E76]">По пространствам</p>
-            <Link href="/a/analytics" className="text-[#C4956A] text-xs">
-              Аналитика →
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {top5Spaces.map((s) => (
-              <div key={s.id}>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm text-[#2C2420]">{s.name}</span>
-                  <span className="text-xs text-[#8A7E76]">{fmt(s.value)}</span>
+      {/* ── ПОСЛЕДНИЕ ВЕЩИ ── */}
+      <div style={{ marginTop: 24 }}>
+        <div style={{ padding: "0 20px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <p style={{ fontSize: 13, fontWeight: 600, color: "#2C2420" }}>Последние добавленные</p>
+          <Link href="/a/search" style={{ fontSize: 12, color: "#C4956A", textDecoration: "none" }}>
+            Все →
+          </Link>
+        </div>
+
+        <div style={{ display: "flex", gap: 12, paddingLeft: 20, overflowX: "auto", paddingBottom: 4 }} className="no-scrollbar">
+          {recentItems.map((item) => (
+            <Link key={item.id} href={`/a/item/${item.id}`} style={{ textDecoration: "none", flexShrink: 0 }}>
+              <div style={{ width: 130 }}>
+                <div style={{
+                  width: 130, height: 130, borderRadius: 16,
+                  background: itemColor(item.category),
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  marginBottom: 8,
+                }}>
+                  <span style={{ fontSize: 32, fontWeight: 700, color: "#7A6E68" }}>
+                    {itemInitials(item.name)}
+                  </span>
                 </div>
-                <div className="h-1.5 bg-[#F3EDE7] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#C4956A] rounded-full"
-                    style={{ width: `${(s.value / maxSpaceValue) * 100}%` }}
-                  />
+                <p style={{
+                  fontSize: 12, fontWeight: 500, color: "#2C2420", lineHeight: 1.3,
+                  display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+                }}>
+                  {item.name}
+                </p>
+                <p style={{ fontSize: 12, color: "#C4956A", marginTop: 2, fontWeight: 600 }}>
+                  {fmt(item.price)}
+                </p>
+              </div>
+            </Link>
+          ))}
+          <div style={{ width: 20, flexShrink: 0 }} />
+        </div>
+      </div>
+
+      {/* ── ПО ПРОСТРАНСТВАМ ── */}
+      <div style={{ padding: "24px 20px 0" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <p style={{ fontSize: 13, fontWeight: 600, color: "#2C2420" }}>По пространствам</p>
+          <Link href="/a/analytics" style={{ fontSize: 12, color: "#C4956A", textDecoration: "none" }}>
+            Аналитика →
+          </Link>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {topSpaces.map((space) => (
+            <Link key={space.id} href={`/a/space/${space.id}`} style={{ textDecoration: "none" }}>
+              <div style={{
+                background: "white",
+                borderRadius: 16,
+                padding: "14px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                border: "1px solid #F0EAE3",
+              }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: "#F3EDE7",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <SpaceIcon name={space.name} type={space.type} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 14, fontWeight: 500, color: "#2C2420", marginBottom: 6 }}>
+                    {space.name}
+                  </p>
+                  <div style={{ height: 4, background: "#F3EDE7", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{
+                      height: 4, borderRadius: 2, background: "#C4956A",
+                      width: `${(space.value / maxVal) * 100}%`,
+                      transition: "width 0.4s ease",
+                    }} />
+                  </div>
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#2C2420" }}>{space.items.length}</p>
+                  <p style={{ fontSize: 11, color: "#B0A89E" }}>вещей</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ОДОЛЖЕННЫЕ */}
-      {LENT_ITEMS.length > 0 && (
-        <section className="px-6 mb-5">
-          <Link
-            href="/a/search"
-            className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3"
-          >
-            <span className="text-xl">🤝</span>
-            <p className="text-amber-800 text-sm font-medium flex-1">
-              {LENT_ITEMS.length} вещи одолжено
-            </p>
-            <span className="text-amber-400 text-sm">→</span>
-          </Link>
-        </section>
-      )}
-
-      {/* ПОСЛЕДНИЕ ДОБАВЛЕННЫЕ — горизонт. скролл */}
-      <section className="mb-5">
-        <div className="px-6 flex justify-between items-center mb-3">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#8A7E76]">Последние</p>
-        </div>
-        <div className="flex gap-3 px-6 overflow-x-auto pb-2 no-scrollbar">
-          {recentItems.map((item) => (
-            <Link
-              key={item.id}
-              href={`/a/item/${item.id}`}
-              className="flex-shrink-0 w-[120px]"
-            >
-              <ItemPhoto item={item} size={120} />
-              <p className="text-xs text-[#2C2420] mt-2 line-clamp-2 leading-tight">
-                {item.name}
-              </p>
-              {item.price > 0 && (
-                <p className="text-xs text-[#C4956A] mt-0.5">{fmt(item.price)}</p>
-              )}
             </Link>
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* ПРОСТРАНСТВА */}
-      <section className="px-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-[#8A7E76] mb-3">Пространства</p>
-        <div className="space-y-2">
-          {MOCK_SPACES.map((space) => {
-            const spaceValue = space.items.reduce((s, i) => s + i.price, 0);
-            return (
-              <Link key={space.id} href={`/a/space/${space.id}`}>
-                <div className="bg-white rounded-2xl shadow-sm px-4 py-3 flex items-center gap-3">
-                  <span className="text-2xl">{spaceEmoji(space.type)}</span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-[#2C2420]">{space.name}</p>
-                    <p className="text-xs text-[#8A7E76]">
-                      {space.items.length} · {fmt(spaceValue)}
-                    </p>
-                  </div>
-                  <span className="text-[#8A7E76]">→</span>
+      {/* ── BOTTOM NAV ── */}
+      <div style={{
+        position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
+        width: "100%", maxWidth: 430,
+        background: "white",
+        borderTop: "1px solid #F0EAE3",
+        padding: "8px 0 16px",
+        display: "flex",
+        zIndex: 50,
+      }}>
+        {[
+          { icon: <Home size={22} strokeWidth={1.5} />, label: "Главная", href: "/a", active: true },
+          { icon: <Grid3x3 size={22} strokeWidth={1.5} />, label: "Пространства", href: "/a/space/1", active: false },
+          { icon: <ScanLine size={22} strokeWidth={1.5} />, label: "Добавить", href: null, active: false, stub: true },
+          { icon: <BarChart2 size={22} strokeWidth={1.5} />, label: "Аналитика", href: "/a/analytics", active: false },
+          { icon: <Settings size={22} strokeWidth={1.5} />, label: "Профиль", href: null, active: false, stub: true },
+        ].map((item) =>
+          item.stub ? (
+            <StubButton
+              key={item.label}
+              label=""
+              icon={
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                  <span style={{ color: "#C8C0B8" }}>{item.icon}</span>
+                  <span style={{ fontSize: 10, color: "#C8C0B8" }}>{item.label}</span>
                 </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* FAB */}
-      <StubButton
-        label="+"
-        description="Добавить вещь через камеру"
-        className="fixed bottom-6 right-6 w-14 h-14 bg-[#C4956A] text-white rounded-full shadow-lg text-2xl flex items-center justify-center"
-      />
-    </main>
+              }
+              description={`${item.label} — в разработке`}
+              className="flex-1 flex flex-col items-center"
+            />
+          ) : (
+            <Link
+              key={item.label}
+              href={item.href!}
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 3,
+                textDecoration: "none",
+                color: item.active ? "#C4956A" : "#C8C0B8",
+              }}
+            >
+              {item.icon}
+              <span style={{ fontSize: 10, fontWeight: item.active ? 600 : 400 }}>{item.label}</span>
+            </Link>
+          )
+        )}
+      </div>
+    </div>
   );
 }
