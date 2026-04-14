@@ -191,8 +191,8 @@ export default function DashboardB() {
                   <StubButton
                     label="Добавить вещь"
                     description="Через камеру — в разработке"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm w-full text-left"
-                    style={{ background: C.surface2, border: `1px solid ${C.border}`, color: C.text } as React.CSSProperties}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm w-full text-left text-[#F5F0E8]"
+                    style={{ background: C.surface2, border: `1px solid ${C.border}` } as React.CSSProperties}
                     icon={<span style={{ fontSize: 16, marginRight: 2 }}>📸</span>}
                   />
                   <Link href="/b/analytics" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: C.surface2, borderRadius: 12, textDecoration: "none", border: `1px solid ${C.border}` }}>

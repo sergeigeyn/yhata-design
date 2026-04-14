@@ -70,8 +70,7 @@ function SidebarB({ pathname }: { pathname: string }) {
             label="Добавить вещь"
             icon={<ScanLine size={17} strokeWidth={1.5} style={{ marginRight: 10, color: C.textDim }} />}
             description="Добавить через камеру — в разработке"
-            className="flex items-center px-3 py-2.5 rounded-xl text-sm w-full text-left transition-colors duration-150"
-            style={{ color: C.textMid } as React.CSSProperties}
+            className="flex items-center px-3 py-2.5 rounded-xl text-sm w-full text-left transition-colors duration-150 text-[#9C978F]"
           />
         </div>
       </nav>
