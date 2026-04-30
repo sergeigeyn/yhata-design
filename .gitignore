@@ -6,3 +6,24 @@ node_modules/
 dist/
 *.tsbuildinfo
 .DS_Store
+
+# === Security ===
+*.pem
+*.key
+*.ppk
+id_rsa*
+id_ed25519*
+*.token
+*secret*
+*credentials*
+.bot_token
+.do_token
+
+# === Backup ===
+*.bak
+*.backup
+*~
+
+# === IDE ===
+.vscode/settings.json
+.idea/
